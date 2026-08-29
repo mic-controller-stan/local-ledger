@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { SETTINGS_ID, type Settings } from "@/types/settings";
 
-const defaultSettings: Settings = {
+export const defaultSettings: Settings = {
   id: SETTINGS_ID,
   businessName: "",
   businessAddress: "",

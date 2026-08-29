@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { getFullInvoice } from "@/db/full-invoice";
 import { deleteInvoice, updateInvoice } from "@/db/invoices";
-import { invoiceTotal } from "@/types/invoice";
+import { invoiceSubtotal, invoiceTax } from "@/types/invoice";
 import type { InvoiceStatus } from "@/types/invoice";
 import { money, shortDate } from "@/utils/format";
 import { downloadInvoicePdf } from "@/utils/pdf";
@@ -57,7 +57,10 @@ function InvoiceDetail({ id }: { id: string }) {
     );
   }
 
-  const total = invoiceTotal(invoice.items);
+  const subtotal = invoiceSubtotal(invoice.items);
+  const taxAmount = invoiceTax(subtotal, invoice.taxRate);
+  const total = subtotal + taxAmount;
+  const currency = invoice.currency || "USD";
 
   async function changeStatus(status: InvoiceStatus) {
     await updateInvoice(id, { status });
@@ -125,15 +128,25 @@ function InvoiceDetail({ id }: { id: string }) {
             >
               <span>{item.description || "-"}</span>
               <span className="text-right">{item.quantity}</span>
-              <span className="text-right">{money(item.rate)}</span>
-              <span className="text-right">{money(item.amount)}</span>
+              <span className="text-right">{money(item.rate, currency)}</span>
+              <span className="text-right">{money(item.amount, currency)}</span>
             </div>
           ))}
         </div>
         <div className="mt-4 flex justify-end border-t border-border pt-4">
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="font-display text-2xl">{money(total)}</p>
+          <div className="w-full max-w-xs space-y-1.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="tabular-nums">{money(subtotal, currency)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Tax ({invoice.taxRate || 0}%)</span>
+              <span className="tabular-nums">{money(taxAmount, currency)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-1.5">
+              <span className="font-display text-lg">Total</span>
+              <span className="font-display text-2xl">{money(total, currency)}</span>
+            </div>
           </div>
         </div>
       </section>

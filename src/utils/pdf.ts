@@ -1,6 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { FullInvoice } from "@/db/full-invoice";
-import { invoiceTotal } from "@/types/invoice";
+import { invoiceSubtotal, invoiceTax } from "@/types/invoice";
 import { money, shortDate } from "./format";
 
 export async function invoiceToPdfBlob(invoice: FullInvoice) {
@@ -54,17 +54,28 @@ export async function invoiceToPdfBlob(invoice: FullInvoice) {
     color: soft,
   });
 
+  const currency = invoice.currency || "USD";
+
   for (const item of invoice.items) {
     y -= 20;
     text(item.description || "-");
     text(String(item.quantity), { x: 360 });
-    text(money(item.rate), { x: 420 });
-    text(money(item.amount), { x: 500 });
+    text(money(item.rate, currency), { x: 420 });
+    text(money(item.amount, currency), { x: 500 });
   }
 
-  y -= 30;
+  const subtotal = invoiceSubtotal(invoice.items);
+  const taxAmount = invoiceTax(subtotal, invoice.taxRate);
+
+  y -= 24;
+  text("Subtotal", { x: 420, color: soft });
+  text(money(subtotal, currency), { x: 500 });
+  y -= 16;
+  text(`Tax (${invoice.taxRate || 0}%)`, { x: 420, color: soft });
+  text(money(taxAmount, currency), { x: 500 });
+  y -= 20;
   text("Total", { x: 420, bold: true, size: 12 });
-  text(money(invoiceTotal(invoice.items)), { x: 500, bold: true, size: 12 });
+  text(money(subtotal + taxAmount, currency), { x: 500, bold: true, size: 12 });
 
   if (invoice.notes) {
     y -= 50;

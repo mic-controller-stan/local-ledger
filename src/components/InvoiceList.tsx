@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { deleteInvoice } from "@/db/invoices";
 import { listFullInvoices, type FullInvoice } from "@/db/full-invoice";
-import { invoiceTotal } from "@/types/invoice";
+import { invoiceGrandTotal } from "@/types/invoice";
 import { money, shortDate } from "@/utils/format";
 import { downloadInvoicePdf } from "@/utils/pdf";
 
@@ -54,7 +54,9 @@ export function InvoiceList() {
               {shortDate(invoice.dueDate)}
             </p>
           </Link>
-          <p className="font-display text-lg">{money(invoiceTotal(invoice.items))}</p>
+          <p className="font-display text-lg">
+            {money(invoiceGrandTotal(invoice.items, invoice.taxRate), invoice.currency || "USD")}
+          </p>
           <div className="flex gap-2">
             <Button size="sm" variant="secondary" onClick={() => downloadInvoicePdf(invoice)}>
               PDF
